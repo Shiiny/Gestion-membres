@@ -18,7 +18,6 @@ class Autoloader {
     		$class = str_replace(__NAMESPACE__ . '\\', '/', $class);    		
     		$class = str_replace('\\', '/', $class);
     	}
-        var_dump(__DIR__.' fichier app');
         require 'class/' . $class . '.php';
     }
 

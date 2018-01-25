@@ -9,9 +9,15 @@ if(!empty($_POST)) {
 	$errors = [];
 	$db = App::getDb();
 	$validator = new Validator($_POST);
-	$validator->validate()
+	$validator->isAlphanumeric('username', "Votre pseudo n'est pas valide !");
+	$validator->isUniq('username', $db, 'users', "Ce pseudo est déjà utilisé");
+	$validator->isEmail('email', "Votre email n'est pas valide !");
 
-	if(empty($_POST['username']) || !preg_match('/^[a-zA-Z0-9_]+$/', $_POST['username'])) {
+	var_dump($validator);
+
+	die();
+
+	/*if(empty($_POST['username']) || !preg_match('/^[a-zA-Z0-9_]+$/', $_POST['username'])) {
 		$errors['username'] = "Votre pseudo n'est pas valide !";
 	}
 	else {
@@ -22,7 +28,7 @@ if(!empty($_POST)) {
 	}
 	if(empty($_POST['email']) || !filter_var($_POST['email'], FILTER_VALIDATE_EMAIL)) {
 		$errors['email'] = "Votre email n'est pas valide !";
-	}
+	}*/
 	else {
 		$user = $db->requete('SELECT id FROM users WHERE email = ?', [$_POST['email']])->fetch();
 		if($user) {
