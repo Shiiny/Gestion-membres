@@ -1,19 +1,21 @@
-<?php require_once 'inc/function.php'; ?>
+<?php 
 
-<?php
-session_start();
+require_once 'class/App.php';
+
+App::load();
+
 
 if(!empty($_POST)) {
 	$errors = [];
-	require_once 'inc/db.php';
+	$db = App::getDb();
+	$validator = new Validator($_POST);
+	$validator->validate()
 
 	if(empty($_POST['username']) || !preg_match('/^[a-zA-Z0-9_]+$/', $_POST['username'])) {
 		$errors['username'] = "Votre pseudo n'est pas valide !";
 	}
 	else {
-		$req = $pdo->prepare('SELECT id FROM users WHERE username = ?');
-		$req->execute([$_POST['username']]);
-		$user = $req->fetch();
+		$user = $db->requete('SELECT id FROM users WHERE username = ?', [$_POST['username']])->fetch();
 		if($user) {
 			$errors['username'] = "Ce pseudo est déjà utilisé";
 		}
@@ -22,9 +24,7 @@ if(!empty($_POST)) {
 		$errors['email'] = "Votre email n'est pas valide !";
 	}
 	else {
-		$req = $pdo->prepare('SELECT id FROM users WHERE email = ?');
-		$req->execute([$_POST['email']]);
-		$user = $req->fetch();
+		$user = $db->requete('SELECT id FROM users WHERE email = ?', [$_POST['email']])->fetch();
 		if($user) {
 			$errors['email'] = "Cet adresse e-mail est déjà utilisé";
 		}
@@ -34,12 +34,12 @@ if(!empty($_POST)) {
 	}
 
 
-	if(empty($errors)) {
-		$req = $pdo->prepare("INSERT INTO users SET username = ?, password = ?, email = ?, confirmation_token = ?");
+	if(empty($errors)) {		
 		$password = password_hash($_POST['password'], PASSWORD_BCRYPT);
 		$token = str_random(60);
-		$req->execute([$_POST['username'], $password, $_POST['email'], $token]);
-		$user_id = $pdo->lastInsertId();
+
+		$db->requete("INSERT INTO users SET username = ?, password = ?, email = ?, confirmation_token = ?", [[$_POST['username'], $password, $_POST['email'], $token]]);
+		$user_id = $db->lastInsertId();
 		$mail_msg = "Afin de valider votre compte merci de cliquer sur ce lien\n\nhttp://localhost/Gestion-membres/confirm.php?id=$user_id&token=$token";
 		$header = 'From: "Web-Shiny"<contact@web-shiny.fr>'."\r\n\r\n";
 		mail($_POST['email'], "Confirmation de votre compte", $mail_msg, $header);
