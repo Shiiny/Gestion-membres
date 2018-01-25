@@ -46,7 +46,7 @@ if(!empty($_POST)) {
 		$_SESSION['flash']['success'] = "Un email de confirmation vous a été envoyé.";
 		header('Location: login.php');
 		exit();
-		//lien : http://localhost/Gestion-membres/confirm.php?id=3&token=SC3dD70MHLJRaT1jHiFTR5D99xp1g4WBYg2zuAZHYWgfjWHEyfxrGqcCl66U
+		//lien : http://localhost/Gestion-membres/confirm.php?id=6&token=UJdnQ0nlv5inzGEJz9e49poH8jnTbRL5eRZBWEKXJ9s7XAFW7BcOYNaAccm9
 	}
 }
 
@@ -92,6 +92,5 @@ if(!empty($_POST)) {
 	<button type="submit" class="btn btn-primary">M'inscrire</button>
 </form>
 
-<?php var_dump($_POST); ?>
 
 <?php require 'inc/footer.php'; ?>
