@@ -1,6 +1,6 @@
-<?php require 'inc/header.php'; ?>
+<?php require_once 'inc/function.php'; ?>
 
-<?php 
+<?php
 
 if(!empty($_POST)) {
 	$errors = [];
@@ -40,14 +40,17 @@ if(!empty($_POST)) {
 		$req->execute([$_POST['username'], $password, $_POST['email'], $token]);
 		$user_id = $pdo->lastInsertId();
 		$mail_msg = "Afin de valider votre compte merci de cliquer sur ce lien\n\nhttp://localhost/Gestion-membres/confirm.php?id=$user_id&token=$token";
-		mail($_POST['email'], "Confirmation de votre compte", $mail_msg);
-		//header('Location: login.php');
-		die(var_dump(imap_mail($_POST['email'], "Confirmation de votre compte", $mail_msg)));
+		$header = 'From: "Web-Shiny"<contact@web-shiny.fr>'."\r\n\r\n";
+		mail($_POST['email'], "Confirmation de votre compte", $mail_msg, $header);
+		header('Location: login.php');
+		exit();
+		//lien : http://localhost/Gestion-membres/confirm.php?id=3&token=SC3dD70MHLJRaT1jHiFTR5D99xp1g4WBYg2zuAZHYWgfjWHEyfxrGqcCl66U
 	}
 }
 
 ?>
 
+<?php require 'inc/header.php'; ?>
 
 <h1>S'inscrire</h1>
 
