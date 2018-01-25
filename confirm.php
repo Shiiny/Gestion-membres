@@ -1,16 +1,21 @@
 <?php
+session_start();
 
 $user_id = $_GET['id'];
 $token = $_GET['token'];
 
 require 'inc/db.php';
-$req = $pdo->prepare('SELECT confirmation_token FROM users WHERE id = ?');
+$req = $pdo->prepare('SELECT * FROM users WHERE id = ?');
 $req->execute([$user_id]);
 $user = $req->fetch();
 
 if($user && $user->confirmation_token == $token) {
-	die('ok')
+	$pdo->prepare('UPDATE users SET confirmation_token = NULL, confirmed_at = NOW() WHERE id = ?')->execute([$user_id]);
+	$_SESSION['flash']['success'] = "Votre compte a bien été activé";
+	$_SESSION['auth'] = $user;
+	header('Location: account.php');
 }
 else {
-	die('pas ok');
+	$_SESSION['flash']['danger'] = "Ce token n'est plus valide";
+	header('Location: login.php');
 }

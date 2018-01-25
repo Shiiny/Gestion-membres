@@ -1,6 +1,7 @@
 <?php require_once 'inc/function.php'; ?>
 
 <?php
+session_start();
 
 if(!empty($_POST)) {
 	$errors = [];
@@ -42,6 +43,7 @@ if(!empty($_POST)) {
 		$mail_msg = "Afin de valider votre compte merci de cliquer sur ce lien\n\nhttp://localhost/Gestion-membres/confirm.php?id=$user_id&token=$token";
 		$header = 'From: "Web-Shiny"<contact@web-shiny.fr>'."\r\n\r\n";
 		mail($_POST['email'], "Confirmation de votre compte", $mail_msg, $header);
+		$_SESSION['flash']['success'] = "Un email de confirmation vous a été envoyé.";
 		header('Location: login.php');
 		exit();
 		//lien : http://localhost/Gestion-membres/confirm.php?id=3&token=SC3dD70MHLJRaT1jHiFTR5D99xp1g4WBYg2zuAZHYWgfjWHEyfxrGqcCl66U
