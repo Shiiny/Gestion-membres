@@ -9,11 +9,15 @@ class App {
 		Autoloader::register();
 	}
 
-	static function getDB() {
+	static function getDb() {
 		if(is_null(self::$db)) {
 			self::$db =  new Database('root', '', 'poo');
 		}
 		return self::$db;
+	}
+
+	static function getAuth() {
+		return new Auth(Session::getInstance(),['restriction_msg' => 'Oups...']);
 	}
 
 	static function str_random($lenght) {
@@ -23,6 +27,7 @@ class App {
 
 	static function redirect($page) {
 		header("Location: $page");
+		exit();
 	}
 
 }

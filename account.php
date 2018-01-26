@@ -1,6 +1,7 @@
 <?php
-require_once 'inc/function.php';
-logged_only();
+	require 'class/App.php';
+	App::load();
+	App::getAuth()->restrict();
 
 if(!empty($_POST)) {
 	if(empty($_POST['password']) || $_POST['password'] != $_POST['password_confirm']) {

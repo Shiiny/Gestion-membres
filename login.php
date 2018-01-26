@@ -1,25 +1,28 @@
-<?php 
-	session_start();
-	require_once 'inc/function.php';
-	require_once 'inc/db.php';
+<?php
+	require 'class/App.php';
+	App::load();
 
-	reconnect_cookie();
+	$db = App::getDb();
+	$auth = App::getAuth();
+	$auth->connectFromCookie($db);
 
-	if(isset($_SESSION['auth'])) {
-		header('Location: account.php');
-		exit();
+	//require_once 'inc/function.php';
+
+	//reconnect_cookie();
+
+	if($auth->user) {
+		App::redirect('account.php');
 	}
 
 	if(!empty($_POST) && !empty($_POST['username']) && !empty($_POST['password'])) {
-		$req = $pdo->prepare('SELECT * FROM users WHERE username = :username OR email = :username AND confirmed_at IS NOT NULL');
-		$req->execute(['username' => $_POST['username']]);
-		$user = $req->fetch();
+		$user = $db->requete('SELECT * FROM users WHERE username = :username OR email = :username AND confirmed_at IS NOT NULL', ['username' => $_POST['username']])->fetch();
+
 		if(password_verify($_POST['password'], $user->password)) {
 			$_SESSION['auth'] = $user;
 			$_SESSION['flash']['success'] = "Vous êtes connecté";
 			if($_POST['remember']) {
 				$remember_token = str_random(250);
-				$pdo->prepare('UPDATE users SET remember = ? WHERE id = ?')->execute([$remember_token, $user->id]);
+				$db->requete('UPDATE users SET remember = ? WHERE id = ?', [$remember_token, $user->id]);
 				setcookie('remember', $user->id . '==' .$remember_token. sha1($user->id. 'test'), time() + 60 * 60 * 24 * 7);
 			}
 			header('Location: account.php');
