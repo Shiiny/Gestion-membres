@@ -3,7 +3,7 @@
 
 class Validator {
 	private $data;
-	private $errors;
+	private $errors = [];
 
 	public function __construct($data) {
 		$this->data = $data;
@@ -16,8 +16,8 @@ class Validator {
 		return $this->data[$field];
 	}
 
-	public function isAlphanumeric($field, $errorMsg) {
-		if(!preg_match('/^[a-zA-Z0-9_]+$/', $this->getField($field))) {
+	public function isAlphanumeric($field, $preg, $errorMsg) {
+		if(!preg_match($preg, $this->getField($field))) {
 			$this->errors[$field] = $errorMsg;
 		}
 
@@ -25,9 +25,9 @@ class Validator {
 
 	public function isUniq($field, $db, $table, $errorMsg) {
 		$record = $db->requete("SELECT id FROM $table WHERE $field = ?", [$this->getField($field)])->fetch();
-			if($record) {
-				$this->errors[$field] = $errorMsg;
-			}
+		if($record) {
+			$this->errors[$field] = $errorMsg;
+		}
 	}
 
 	public function isEmail($field, $errorMsg) {
@@ -36,5 +36,18 @@ class Validator {
 		}
 	}
 
+	public function isConfirmed($field, $errorMsg) {
+		if(empty($this->getField($field)) || $this->getField($field) !== $this->getField($field .'_confirm')) {
+			$this->errors[$field] = $errorMsg;
+		}
+	}
+
+	public function isValid() {
+		return empty($this->errors);
+	}
+
+	public function getErrors() {
+		return $this->errors;
+	}
 
 }

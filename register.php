@@ -9,50 +9,31 @@ if(!empty($_POST)) {
 	$errors = [];
 	$db = App::getDb();
 	$validator = new Validator($_POST);
-	$validator->isAlphanumeric('username', "Votre pseudo n'est pas valide !");
-	$validator->isUniq('username', $db, 'users', "Ce pseudo est déjà utilisé");
+	$validator->isAlphanumeric('username', '/^[a-zA-Z0-9_]+$/', "Votre pseudo n'est pas valide !");
+	if($validator->isValid()) {
+		$validator->isUniq('username', $db, 'users', "Ce pseudo est déjà utilisé");
+	}
 	$validator->isEmail('email', "Votre email n'est pas valide !");
+	if($validator->isValid()) {
+		$validator->isUniq('email', $db, 'users', "Cet adresse e-mail est déjà utilisé");
+	}
+	$validator->isConfirmed('password', "Vous devez rentrer un mot de passe valide");
 
 	var_dump($validator);
+	var_dump($validator->isValid());
 
-	die();
+	
+	if($validator->isValid()) {
+		$auth = new Auth($db);
+		$auth->register($_POST['username'], $_POST['password'], $_POST['email']);
+		Session::getInstance()->setFlash('success', "Un email de confirmation vous a été envoyé.");
+		App::redirect('login.php');
 
-	/*if(empty($_POST['username']) || !preg_match('/^[a-zA-Z0-9_]+$/', $_POST['username'])) {
-		$errors['username'] = "Votre pseudo n'est pas valide !";
-	}
-	else {
-		$user = $db->requete('SELECT id FROM users WHERE username = ?', [$_POST['username']])->fetch();
-		if($user) {
-			$errors['username'] = "Ce pseudo est déjà utilisé";
-		}
-	}
-	if(empty($_POST['email']) || !filter_var($_POST['email'], FILTER_VALIDATE_EMAIL)) {
-		$errors['email'] = "Votre email n'est pas valide !";
-	}*/
-	else {
-		$user = $db->requete('SELECT id FROM users WHERE email = ?', [$_POST['email']])->fetch();
-		if($user) {
-			$errors['email'] = "Cet adresse e-mail est déjà utilisé";
-		}
-	}
-	if(empty($_POST['password']) || $_POST['password'] !== $_POST['password_confirm']) {
-		$errors['password'] = "Vous devez rentrer un mot de passe valide";
-	}
-
-
-	if(empty($errors)) {		
-		$password = password_hash($_POST['password'], PASSWORD_BCRYPT);
-		$token = str_random(60);
-
-		$db->requete("INSERT INTO users SET username = ?, password = ?, email = ?, confirmation_token = ?", [[$_POST['username'], $password, $_POST['email'], $token]]);
-		$user_id = $db->lastInsertId();
-		$mail_msg = "Afin de valider votre compte merci de cliquer sur ce lien\n\nhttp://localhost/Gestion-membres/confirm.php?id=$user_id&token=$token";
-		$header = 'From: "Web-Shiny"<contact@web-shiny.fr>'."\r\n\r\n";
-		mail($_POST['email'], "Confirmation de votre compte", $mail_msg, $header);
-		$_SESSION['flash']['success'] = "Un email de confirmation vous a été envoyé.";
-		header('Location: login.php');
-		exit();
+		die();
 		//lien : http://localhost/Gestion-membres/confirm.php?id=6&token=UJdnQ0nlv5inzGEJz9e49poH8jnTbRL5eRZBWEKXJ9s7XAFW7BcOYNaAccm9
+	}
+	else {
+		$errors = $validator->getErrors();
 	}
 }
 
