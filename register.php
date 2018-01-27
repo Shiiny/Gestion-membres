@@ -1,4 +1,4 @@
-<?php 
+1<?php 
 
 	require 'class/App.php';
 
@@ -69,7 +69,6 @@
 		<label for="">Confirmez votre mot de passe</label>
 		<input type="password" name="password_confirm" class="form-control"  />
 	</div>
-
 	<button type="submit" class="btn btn-primary">M'inscrire</button>
 </form>
 

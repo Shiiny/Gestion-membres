@@ -13,8 +13,12 @@ class Auth {
 		$this->session = $session;
 	}
 
+	public function hashPassword($password) {
+		return password_hash($password, PASSWORD_BCRYPT);
+	}
+
 	public function register($db, $username, $password, $email) {
-		$password = password_hash($password, PASSWORD_BCRYPT);
+		$password = $this->hashPassword($password);
 		$token = App::str_random(60);
 
 		$db->requete("INSERT INTO users SET username = ?, password = ?, email = ?, confirmation_token = ?", [$username, $password, $email, $token]);
@@ -76,7 +80,51 @@ class Auth {
 		}
 	}
 
-	public function login($username, $password, $remember = false) {
-		
+
+	public function login($db, $username, $password, $remember = false) {
+		$user = $db->requete('SELECT * FROM users WHERE username = :username OR email = :username AND confirmed_at IS NOT NULL', ['username' => $username])->fetch();
+		if(password_verify($password, $user->password)) {
+			$this->connect($user);
+			if($remember) {
+				$this->remember($db, $user->id);
+			}
+			return $user;
+		}
+		return false;
+	}
+
+	public function remember($db, $user_id) {
+		$remember_token = App::str_random(250);
+		$db->requete('UPDATE users SET remember = ? WHERE id = ?', [$remember_token, $user_id]);
+		setcookie('remember', $user_id . '==' .$remember_token. sha1($user_id. 'test'), time() + 60 * 60 * 24 * 7);
+	}
+
+	public function logout() {
+		setcookie('remember', NULL, -1);
+		$this->session->destroy('auth');
+	}
+
+	public function forget($db, $email) {
+		$user = $db->requete('SELECT * FROM users WHERE email = ? AND confirmed_at IS NOT NULL', [$email])->fetch();
+		if($user) {
+			$reset_token = App::str_random(60);
+			$db->requete('UPDATE users SET reset_token = ?, reset_at = NOW() WHERE id = ?',[$reset_token, $user->id]);
+			$mail_msg = "Cliquez sur ce lien\n\nhttp://localhost/Gestion-membres/reset.php?id={$user->id}&token=$reset_token\n\nPour réinitailiser votre mot de passe";
+			mail($email, "Demande de réinitialisation", $mail_msg);
+			return $user;
+		}
+		return false;
+	}
+
+	public function checkResetToken($db, $user_id, $token) {
+		return $db->requete('SELECT * FROM users WHERE id = ? AND reset_token = ? AND reset_at > DATE_SUB(NOW(), INTERVAL 30 MINUTE)', [$user_id, $token])->fetch();
+	}
+
+	public function resetPassword($db, $password, $user) {
+		$password = $this->hashPassword($password);
+		$db->requete('UPDATE users SET password = ?, reset_token = NULL, reset_at = NULL WHERE id = ?', [$password, $user->id]);
+		$this->connect($user);
 	}
 }
+
+

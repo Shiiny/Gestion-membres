@@ -5,37 +5,22 @@
 	$db = App::getDb();
 	$auth = App::getAuth();
 	$auth->connectFromCookie($db);
+	$session = Session::getInstance();
 
-	//require_once 'inc/function.php';
-
-	//reconnect_cookie();
-
-	if($auth->user) {
+	if($auth->user()) {
 		App::redirect('account.php');
 	}
 
 	if(!empty($_POST) && !empty($_POST['username']) && !empty($_POST['password'])) {
-		$user = $db->requete('SELECT * FROM users WHERE username = :username OR email = :username AND confirmed_at IS NOT NULL', ['username' => $_POST['username']])->fetch();
-
-		if(password_verify($_POST['password'], $user->password)) {
-			$_SESSION['auth'] = $user;
-			$_SESSION['flash']['success'] = "Vous êtes connecté";
-			if($_POST['remember']) {
-				$remember_token = str_random(250);
-				$db->requete('UPDATE users SET remember = ? WHERE id = ?', [$remember_token, $user->id]);
-				setcookie('remember', $user->id . '==' .$remember_token. sha1($user->id. 'test'), time() + 60 * 60 * 24 * 7);
-			}
-			header('Location: account.php');
-			exit();
+		$user = $auth->login($db, $_POST['username'], $_POST['password'], isset($_POST['remember']));
+		if($user) {
+			$session->setFlash('success', "Vous êtes connecté");
+			App::redirect('account.php');
 		}
 		else {
-			$_SESSION['flash']['danger'] = "Identifiant ou mot de passe incorrecte";
+			$session->setFlash('danger', "Identifiant ou mot de passe incorrecte");
 		}
 	}
-
-
-
-
  ?>
 
 <?php require 'inc/header.php'; ?>

@@ -1,52 +1,38 @@
-<?php 
+<?php
+	require 'class/App.php';
+	App::load();
 
-if(isset($_GET['id']) && isset($_GET['token'])) {
-	require_once 'inc/db.php';
-	$req = $pdo->prepare('SELECT * FROM users WHERE id = ? AND reset_token = ? AND reset_at > DATE_SUB(NOW(), INTERVAL 30 MINUTE)');
-	$req->execute([$_GET['id'], $_GET['token']]);
-	$user = $req->fetch();
-	session_start();
-	if($user) {
-		if(!empty($_POST)) {
-			if(!empty($_POST['password']) && $_POST['password'] === $_POST['password_confirm']) {
-				$password = password_hash($_POST['password'], PASSWORD_BCRYPT);
-				$pdo->prepare('UPDATE users SET password = ?, reset_token = NULL, reset_at = NULL')->execute([$password]);
-				$_SESSION['flash']['success'] = "Votre mot de passe a bien été modifié";
-				$_SESSION['auth'] = $user;
-				header('Location: account.php');
-				exit();
+	$db = App::getDb();
+	$auth = App::getAuth();
+	$session = Session::getInstance();
+
+	if(isset($_GET['id']) && isset($_GET['token'])) {
+		$user = $auth->checkResetToken($db, $_GET['id'], $_GET['token']);
+		if($user) {
+			if(!empty($_POST)) {
+				if(!empty($_POST['password']) && $_POST['password'] === $_POST['password_confirm']) {
+					$auth->resetPassword($db, $_POST['password'], $user);
+					$session->setFlash('success', "Votre mot de passe a bien été modifié");
+					App::redirect('account.php');
+				}
+				else {
+					$session->setFlash('danger', "Les mots de passe ne sont pas identique");
+				}
 			}
+		}
+		else {
+			$session->setFlash('danger', "Ce token n'est pas valide");
+			App::redirect('login.php');
 		}
 	}
 	else {
-		$_SESSION['flash']['danger'] = "Ce token n'est pas valide";
-		header('Location: login.php');
-		exit();
+		App::redirect('login.php');
 	}
-
-}
-else {
-	header('Location: login.php');
-	exit();
-}
-
-
- ?>
+?>
 
 <?php require 'inc/header.php'; ?>
 
 <h1>Réinitialiser mon mot de passe</h1>
-
-<?php if(!empty($errors)): ?>
-<div class="alert alert-danger">
-	<p>Vous n'avez pas rempli le formulaire correctement</p>
-	<ul>
-	<?php foreach ($errors as $error): ?>
-		<li><?= $error; ?></li>
-	<?php endforeach; ?>
-	</ul>
-</div>
-<?php endif; ?>
 
 <form action="" method="post">
 	<div class="form-group">

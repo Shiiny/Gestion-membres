@@ -22,8 +22,7 @@ if(!empty($_POST)) {
 
 <?php require 'inc/header.php'; ?>
 
-<h1>Mon compte</h1>
-<p>Pseudo : <?= $_SESSION['auth']->username; ?></p>
+<h1>Bonjour <?= $_SESSION['auth']->username; ?></h1>
 
 <form action="" method="post">
 	<div class="form-group">
