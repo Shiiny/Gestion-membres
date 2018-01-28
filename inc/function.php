@@ -47,3 +47,19 @@ function reconnect_cookie(){
 		}
 	}
 }
+
+
+function allow($rang) {
+	require_once 'db.php';
+		if(!isset($pdo)) {
+			global $pdo;
+		}
+	$req = $pdo->prepare('SELECT slug, level FROM roles');
+	$req->execute();
+	$data = $req->fetchAll();
+	$roles = [];
+	foreach ($data as $key) {
+		$roles[$key->slug] = $key->level;
+	}
+
+}

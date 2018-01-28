@@ -82,7 +82,7 @@ class Auth {
 
 
 	public function login($db, $username, $password, $remember = false) {
-		$user = $db->requete('SELECT * FROM users WHERE username = :username OR email = :username AND confirmed_at IS NOT NULL', ['username' => $username])->fetch();
+		$user = $db->requete('SELECT * FROM users LEFT JOIN roles ON users.role_id = roles.id WHERE username = :username OR email = :username AND confirmed_at IS NOT NULL', ['username' => $username])->fetch();
 		if(password_verify($password, $user->password)) {
 			$this->connect($user);
 			if($remember) {

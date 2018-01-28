@@ -2,6 +2,7 @@
 	require 'class/App.php';
 	App::load();
 	App::getAuth()->restrict();
+	$session = Session::getInstance();
 
 if(!empty($_POST)) {
 	if(empty($_POST['password']) || $_POST['password'] != $_POST['password_confirm']) {
@@ -21,8 +22,9 @@ if(!empty($_POST)) {
 ?>
 
 <?php require 'inc/header.php'; ?>
-
-<h1>Bonjour <?= $_SESSION['auth']->username; ?></h1>
+<?php var_dump($_SESSION); ?>
+<h1>Bonjour <?= $session->read('auth')->username; ?></h1>
+<h3><?= $session->read('auth')->name; ?></h3>
 
 <form action="" method="post">
 	<div class="form-group">
